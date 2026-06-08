@@ -19,6 +19,21 @@
 
 `hsinchu-transactions-ALL.csv` 額外含 `週期`、`縣市` 兩欄，方便依時間/區域做樞紐分析、追蹤趨勢。
 
+## 我的物件追蹤
+
+以 `ALL.csv` 為比較基準，自動估算並追蹤自有物件（德鑫御天地 14D）合理售價：
+
+| 檔案 | 說明 |
+| --- | --- |
+| [my-property-14D.md](my-property-14D.md) | 物件資料、本期估值、建議掛牌價、估值快照紀錄、待辦 |
+| [my-property-14D-log.csv](my-property-14D-log.csv) | 每次執行累積的估值快照（趨勢用） |
+
+每週新資料併入後重新執行即更新估值並新增一筆快照：
+
+```bash
+python3 scripts/track_property.py        # 預設今日；或帶入 YYYY-MM-DD
+```
+
 ## 欄位說明
 
 | 欄位 | 說明 |
