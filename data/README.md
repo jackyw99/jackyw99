@@ -15,7 +15,8 @@
 | 2026/02/24 ~ 03/02 | 38 | [md](hsinchu-transactions-2026-02-24_03-02.md) | [csv](hsinchu-transactions-2026-02-24_03-02.csv) |
 | 2026/03/10 ~ 03/16 | 63 | [md](hsinchu-transactions-2026-03-10_03-16.md) | [csv](hsinchu-transactions-2026-03-10_03-16.csv) |
 | 2026/05/26 ~ 06/01 | 84 | [md](hsinchu-transactions-2026-05-26_06-01.md) | [csv](hsinchu-transactions-2026-05-26_06-01.csv) |
-| **合計** | **467** | — | [**ALL.csv**](hsinchu-transactions-ALL.csv) |
+| 2026/06/02 ~ 06/08 | 61 | [md](hsinchu-transactions-2026-06-02_06-08.md) | [csv](hsinchu-transactions-2026-06-02_06-08.csv) |
+| **合計** | **528** | — | [**ALL.csv**](hsinchu-transactions-ALL.csv) |
 
 `hsinchu-transactions-ALL.csv` 額外含 `週期`、`縣市` 兩欄，方便依時間/區域做樞紐分析、追蹤趨勢。
 
