@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>English Reading Comprehension Test</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --panel: #ffffff;
+    --ink: #232020;
+    --muted: #6b635a;
+    --accent: #c4622d;
+    --accent-dark: #9c4a1d;
+    --line: #e3ddd2;
+    --ok: #2e7d4f;
+    --bad: #c0392b;
+    --shadow: 0 2px 14px rgba(40, 30, 20, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  header {
+    padding: 28px 20px 18px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.9rem; letter-spacing: 0.3px; }
+  header p { margin: 0; color: var(--muted); font-style: italic; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 22px 18px 64px; }
+
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 26px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 6px; flex: 1 1 200px; }
+  label { font-size: 0.85rem; color: var(--muted); font-family: system-ui, sans-serif; }
+  select, input[type="text"] {
+    font-family: system-ui, sans-serif;
+    font-size: 0.98rem;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fffdf8;
+    color: var(--ink);
+  }
+  .check { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; font-family: system-ui, sans-serif; font-size: 0.9rem; color: var(--muted); }
+  button {
+    font-family: system-ui, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 20px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.98rem;
+    transition: background 0.15s ease;
+  }
+  button:hover:not(:disabled) { background: var(--accent-dark); }
+  button:disabled { opacity: 0.55; cursor: progress; }
+
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 10px 18px;
+    font-family: system-ui, sans-serif; font-size: 0.82rem; color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .badge {
+    background: #efe7da; color: var(--accent-dark);
+    border-radius: 999px; padding: 2px 12px; font-weight: 600;
+  }
+  article {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 26px 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 26px;
+  }
+  article h2 { margin: 0 0 14px; font-size: 1.5rem; }
+  article p { margin: 0 0 14px; }
+  article p:last-child { margin-bottom: 0; }
+
+  .q {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .q .qhead { display: flex; gap: 10px; align-items: baseline; margin-bottom: 12px; }
+  .q .qnum { font-weight: 700; color: var(--accent); }
+  .q .skill { font-family: system-ui, sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); background: #f0ece3; border-radius: 6px; padding: 2px 8px; }
+  .q .qtext { font-weight: 600; margin-bottom: 10px; }
+  .opt {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+    margin-bottom: 8px; cursor: pointer; background: #fffdf8;
+    font-family: system-ui, sans-serif; font-size: 0.96rem;
+  }
+  .opt:hover { border-color: var(--accent); }
+  .opt input { margin-top: 4px; }
+  .opt.correct { border-color: var(--ok); background: #eef7f0; }
+  .opt.wrong { border-color: var(--bad); background: #fbeeec; }
+  .opt .tick { margin-left: auto; font-weight: 700; }
+  .explain {
+    font-family: system-ui, sans-serif; font-size: 0.88rem; color: var(--muted);
+    margin-top: 8px; padding: 9px 12px; border-left: 3px solid var(--accent);
+    background: #faf7f0; border-radius: 0 6px 6px 0; display: none;
+  }
+  .explain.show { display: block; }
+
+  .scorebar {
+    position: sticky; bottom: 0; z-index: 5;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 18px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .scorebar .score { font-weight: 700; font-size: 1.1rem; font-family: system-ui, sans-serif; }
+  .hint { font-family: system-ui, sans-serif; font-size: 0.85rem; color: var(--muted); }
+  .error { color: var(--bad); font-family: system-ui, sans-serif; background: #fbeeec; border: 1px solid #f0c8c2; border-radius: 8px; padding: 12px 14px; }
+  .note { color: var(--accent-dark); font-family: system-ui, sans-serif; font-size: 0.85rem; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>English Reading Comprehension Test</h1>
+  <p>Choose a level, generate a passage, and answer six questions.</p>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <div class="row">
+      <div class="field">
+        <label for="level">Level</label>
+        <select id="level">
+          <option value="junior">Junior High — ~400 words</option>
+          <option value="high">High School — ~600 words</option>
+          <option value="university">University — ~1000 words</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="topic">Topic (optional)</label>
+        <input type="text" id="topic" placeholder="e.g. volcanoes, the printing press, AI ethics" />
+      </div>
+      <div class="field" style="flex:0 0 auto;">
+        <label>&nbsp;</label>
+        <button id="go">Generate test</button>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="useSearch" />
+        <label for="useSearch" style="margin:0;">Use web search for current, real-world information</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="status"></div>
+  <div id="output" class="hidden">
+    <div class="meta" id="meta"></div>
+    <article id="article"></article>
+    <div id="questions"></div>
+    <div class="scorebar">
+      <button id="submit">Check answers</button>
+      <button id="reset" style="background:#8a8178;">New test</button>
+      <span class="score hidden" id="score"></span>
+      <span class="hint" id="hint">Answer all six questions, then check.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let current = null; // { questions: [...] }
+
+function paragraphs(text) {
+  return String(text)
+    .split(/\n{2,}|\r\n\r\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+function render(data) {
+  current = data;
+  $('output').classList.remove('hidden');
+
+  const meta = [];
+  meta.push(`<span class="badge">${data.levelLabel}</span>`);
+  if (data.topic) meta.push(`Topic: ${escapeHtml(data.topic)}`);
+  meta.push(`${data.wordCount} words (target ~${data.targetWords})`);
+  meta.push(`6 questions`);
+  $('meta').innerHTML = meta.join('');
+
+  const art = $('article');
+  art.innerHTML = '<h2>' + escapeHtml(data.title) + '</h2>' +
+    paragraphs(data.article).map((p) => '<p>' + escapeHtml(p) + '</p>').join('');
+
+  const box = $('questions');
+  box.innerHTML = '';
+  data.questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'q';
+    div.dataset.qi = qi;
+    const opts = q.options.map((opt, oi) => `
+      <label class="opt" data-oi="${oi}">
+        <input type="radio" name="q${qi}" value="${oi}" />
+        <span>${'ABCD'[oi]}. ${escapeHtml(opt)}</span>
+        <span class="tick"></span>
+      </label>`).join('');
+    div.innerHTML = `
+      <div class="qhead">
+        <span class="qnum">${qi + 1}.</span>
+        <span class="skill">${escapeHtml(q.skill || '')}</span>
+      </div>
+      <div class="qtext">${escapeHtml(q.question)}</div>
+      ${opts}
+      <div class="explain" id="exp${qi}"><strong>Explanation:</strong> ${escapeHtml(q.explanation || '')}</div>`;
+    box.appendChild(div);
+  });
+
+  $('score').classList.add('hidden');
+  $('hint').textContent = 'Answer all six questions, then check.';
+  $('submit').disabled = false;
+  window.scrollTo({ top: $('output').offsetTop - 10, behavior: 'smooth' });
+}
+
+function grade() {
+  if (!current) return;
+  let correct = 0;
+  let answered = 0;
+  current.questions.forEach((q, qi) => {
+    const chosen = document.querySelector(`input[name="q${qi}"]:checked`);
+    const labels = document.querySelectorAll(`.q[data-qi="${qi}"] .opt`);
+    labels.forEach((lab) => {
+      const oi = Number(lab.dataset.oi);
+      lab.classList.remove('correct', 'wrong');
+      lab.querySelector('.tick').textContent = '';
+      if (oi === q.correct_index) {
+        lab.classList.add('correct');
+        lab.querySelector('.tick').textContent = '✓';
+      }
+    });
+    if (chosen) {
+      answered++;
+      const oi = Number(chosen.value);
+      if (oi === q.correct_index) correct++;
+      else {
+        const lab = document.querySelector(`.q[data-qi="${qi}"] .opt[data-oi="${oi}"]`);
+        if (lab) { lab.classList.add('wrong'); lab.querySelector('.tick').textContent = '✗'; }
+      }
+    }
+    $('exp' + qi).classList.add('show');
+  });
+
+  const score = $('score');
+  score.classList.remove('hidden');
+  score.textContent = `Score: ${correct} / ${current.questions.length}`;
+  score.style.color = correct === current.questions.length ? 'var(--ok)' : 'var(--ink)';
+  $('hint').textContent = answered < current.questions.length
+    ? `You left ${current.questions.length - answered} unanswered.`
+    : 'Review the explanations below each question.';
+}
+
+async function generate() {
+  const level = $('level').value;
+  const topic = $('topic').value.trim();
+  const useSearch = $('useSearch').checked;
+
+  $('go').disabled = true;
+  $('output').classList.add('hidden');
+  $('status').innerHTML = '<div class="controls"><span class="spin"></span>' +
+    (useSearch ? 'Searching and writing your passage…' : 'Writing your passage and questions…') +
+    ' This can take 20–60 seconds.</div>';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ level, topic, useSearch }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+    $('status').innerHTML = data.note ? `<div class="note">${escapeHtml(data.note)}</div>` : '';
+    render(data);
+  } catch (e) {
+    $('status').innerHTML = '<div class="error">Could not generate a test: ' + escapeHtml(e.message) + '</div>';
+  } finally {
+    $('go').disabled = false;
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+$('go').addEventListener('click', generate);
+$('submit').addEventListener('click', grade);
+$('reset').addEventListener('click', () => {
+  $('output').classList.add('hidden');
+  $('status').innerHTML = '';
+  current = null;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+</body>
+</html>
