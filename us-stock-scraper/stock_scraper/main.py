@@ -29,9 +29,11 @@ from .scraper import fetch_stock_history
 logger = logging.getLogger("stock_scraper")
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "tickers": ["AAPL"],
+    "tickers": ["AMSC"],
     "period": "1y",
     "interval": "1d",
+    "source": "yahoo",
+    "include_fundamentals": False,
     "output_dir": "output",
     "upload_to_drive": True,
     "drive_folder_id": "",
@@ -59,6 +61,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--tickers", nargs="+", help="股票代號清單，例如 AAPL MSFT")
     parser.add_argument("--period", help="期間 (1d,5d,1mo,1y,5y,max...)")
     parser.add_argument("--interval", help="間隔 (1d,1wk,1mo...)")
+    parser.add_argument(
+        "--source",
+        choices=["yahoo", "stooq", "alphavantage"],
+        help="資料來源 / data source (預設 yahoo)",
+    )
+    parser.add_argument(
+        "--with-fundamentals",
+        action="store_true",
+        help="一併抓取基本面資料 (僅 yahoo) / also fetch fundamentals",
+    )
     parser.add_argument("--output-dir", help="本地輸出資料夾")
     parser.add_argument("--drive-folder-id", help="Google Drive 目標資料夾 ID")
     parser.add_argument(
@@ -79,6 +91,10 @@ def merge_cli_into_config(config: dict[str, Any], args: argparse.Namespace) -> d
         config["period"] = args.period
     if args.interval:
         config["interval"] = args.interval
+    if args.source:
+        config["source"] = args.source
+    if args.with_fundamentals:
+        config["include_fundamentals"] = True
     if args.output_dir:
         config["output_dir"] = args.output_dir
     if args.drive_folder_id is not None and args.drive_folder_id != "":
@@ -120,7 +136,11 @@ def run(config: dict[str, Any]) -> int:
     for ticker in tickers:
         try:
             data = fetch_stock_history(
-                ticker, period=config["period"], interval=config["interval"]
+                ticker,
+                period=config["period"],
+                interval=config["interval"],
+                source=config.get("source", "yahoo"),
+                include_fundamentals=config.get("include_fundamentals", False),
             )
             path = save_json(data, config["output_dir"], data["ticker"])
             if uploader:

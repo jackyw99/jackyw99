@@ -2,106 +2,78 @@
 抓取美股個股歷史資料的核心模組。
 Core module for scraping US stock historical data.
 
-使用 yfinance (Yahoo Finance) 取得每日 OHLCV 與股息/分割資訊，
-並整理成方便儲存的 JSON 結構。
-Uses yfinance (Yahoo Finance) to obtain daily OHLCV plus
-dividends/splits, then organises it into a JSON-friendly structure.
+支援多種資料來源 (yahoo / stooq / alphavantage)，可選擇是否一併抓取基本面，
+最後整理成方便儲存的 JSON 結構。
+Supports multiple data sources, optionally includes fundamentals, and
+organises everything into a JSON-friendly structure.
 """
 
 from __future__ import annotations
 
 import logging
-import math
 from datetime import datetime, timezone
 from typing import Any
 
-import yfinance as yf
+from .fundamentals import fetch_fundamentals
+from .sources import fetch_records
 
 logger = logging.getLogger(__name__)
 
-
-def _clean(value: Any) -> Any:
-    """把 NaN / NaT / numpy 型別轉成可序列化為 JSON 的值。"""
-    if value is None:
-        return None
-    # pandas/np NaN
-    if isinstance(value, float) and math.isnan(value):
-        return None
-    # numpy scalar -> python scalar
-    if hasattr(value, "item"):
-        try:
-            return value.item()
-        except (ValueError, AttributeError):
-            pass
-    return value
+_SOURCE_LABEL = {
+    "yahoo": "Yahoo Finance (yfinance)",
+    "stooq": "Stooq (stooq.com)",
+    "alphavantage": "Alpha Vantage",
+}
 
 
 def fetch_stock_history(
     ticker: str,
     period: str = "1y",
     interval: str = "1d",
+    source: str = "yahoo",
+    include_fundamentals: bool = False,
 ) -> dict[str, Any]:
     """
-    抓取單一美股代號的歷史資料。
-    Fetch historical data for a single US stock ticker.
+    抓取單一美股代號的歷史資料 (與可選的基本面)。
+    Fetch historical data (and optional fundamentals) for one US ticker.
 
     Args:
-        ticker:   股票代號，例如 "AAPL"。
-        period:   期間，例如 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max。
-        interval: 間隔，例如 1d, 1wk, 1mo (日內 1m/5m 僅支援近期)。
+        ticker:               股票代號，例如 "AMSC"。
+        period:               期間，例如 1d,5d,1mo,1y,5y,max。
+        interval:             間隔，例如 1d,1wk,1mo。
+        source:               資料來源 yahoo / stooq / alphavantage。
+        include_fundamentals: 是否一併抓取基本面 (僅 yahoo 支援)。
 
     Returns:
-        一個可直接存成 JSON 的 dict。
+        可直接存成 JSON 的 dict。
     """
     symbol = ticker.strip().upper()
     if not symbol:
         raise ValueError("ticker 不可為空 / ticker must not be empty")
 
-    logger.info("抓取 %s 的歷史資料 (period=%s, interval=%s)...", symbol, period, interval)
+    logger.info(
+        "抓取 %s 歷史資料 (source=%s, period=%s, interval=%s)...",
+        symbol, source, period, interval,
+    )
+    records, meta = fetch_records(symbol, period, interval, source)
 
-    tk = yf.Ticker(symbol)
-    hist = tk.history(period=period, interval=interval, auto_adjust=False)
-
-    if hist is None or hist.empty:
-        raise ValueError(
-            f"找不到 {symbol} 的資料，請確認代號是否正確 / no data returned for {symbol}"
-        )
-
-    records: list[dict[str, Any]] = []
-    for ts, row in hist.iterrows():
-        # ts 可能帶有時區，統一輸出為 ISO 日期字串
-        date_str = ts.strftime("%Y-%m-%d") if hasattr(ts, "strftime") else str(ts)
-        records.append(
-            {
-                "date": date_str,
-                "open": _clean(row.get("Open")),
-                "high": _clean(row.get("High")),
-                "low": _clean(row.get("Low")),
-                "close": _clean(row.get("Close")),
-                "adj_close": _clean(row.get("Adj Close")),
-                "volume": _clean(row.get("Volume")),
-                "dividends": _clean(row.get("Dividends")),
-                "stock_splits": _clean(row.get("Stock Splits")),
-            }
-        )
-
-    # 嘗試取得基本公司資訊 (失敗不影響主流程)
-    meta: dict[str, Any] = {}
-    try:
-        info = tk.info or {}
-        for key in ("shortName", "longName", "sector", "industry", "currency", "exchange"):
-            if info.get(key) is not None:
-                meta[key] = info[key]
-    except Exception as exc:  # noqa: BLE001 - info 常因 API 變動而失敗，可忽略
-        logger.warning("無法取得 %s 的公司資訊: %s", symbol, exc)
-
-    return {
+    data: dict[str, Any] = {
         "ticker": symbol,
         "period": period,
         "interval": interval,
-        "source": "Yahoo Finance (yfinance)",
+        "source": _SOURCE_LABEL.get(source.lower(), source),
         "downloaded_at": datetime.now(timezone.utc).isoformat(),
         "record_count": len(records),
         "meta": meta,
         "history": records,
     }
+
+    if include_fundamentals:
+        if source.lower() == "yahoo":
+            logger.info("抓取 %s 的基本面資料...", symbol)
+            data["fundamentals"] = fetch_fundamentals(symbol)
+        else:
+            logger.warning("基本面資料僅支援 yahoo 來源，已略過 %s", symbol)
+            data["fundamentals"] = None
+
+    return data

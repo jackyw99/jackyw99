@@ -10,6 +10,7 @@ config.json
 output/
 *.json
 !config.example.json
+!samples/*.json
 
 # Python
 __pycache__/
