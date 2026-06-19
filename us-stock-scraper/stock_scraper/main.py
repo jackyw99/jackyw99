@@ -120,6 +120,13 @@ def save_json(data: dict[str, Any], output_dir: str, ticker: str) -> str:
 
 def run(config: dict[str, Any]) -> int:
     tickers = config["tickers"]
+    # 型別正規化：允許設定檔誤填成字串 (例如 "AMSC AAPL")
+    if isinstance(tickers, str):
+        tickers = tickers.split()
+    if not isinstance(tickers, (list, tuple)):
+        logger.error("tickers 必須是清單或字串 / tickers must be a list or string")
+        return 2
+    tickers = [str(t).strip() for t in tickers if str(t).strip()]
     if not tickers:
         logger.error("沒有指定任何股票代號 / no tickers given")
         return 2
@@ -157,7 +164,8 @@ def run(config: dict[str, Any]) -> int:
 
     total = len(tickers)
     logger.info("完成: 成功 %d / 共 %d (失敗 %d)", total - failures, total, failures)
-    return 1 if failures == total else 0
+    # 只要有任何代號失敗就回傳非 0，讓 GitHub Actions/cron 能偵測到異常
+    return 1 if failures else 0
 
 
 def main(argv: list[str] | None = None) -> int:

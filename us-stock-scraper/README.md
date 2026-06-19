@@ -198,6 +198,9 @@ python -m stock_scraper.main --config config.json
 `.github/workflows/scrape-stocks.yml` 會每個交易日 (UTC 22:30，美股收盤後) 自動抓取
 並上傳到 Google Drive，也可在 Actions 頁面手動觸發 (workflow_dispatch)。
 
+> 📖 **完整逐步教學 (含建立 Service Account、設定 secrets、手動觸發)：**
+> [`docs/github-actions-setup.md`](docs/github-actions-setup.md)
+
 ### 需設定的 Secrets / Required repository secrets
 
 到 GitHub repo → Settings → Secrets and variables → Actions 新增：
