@@ -1,0 +1,25 @@
+# Google OAuth 憑證與權杖 (機密，切勿上傳) / Google OAuth secrets - DO NOT COMMIT
+credentials.json
+token.json
+service_account.json
+
+# 個人設定檔 / Personal config
+config.json
+
+# 下載輸出的 JSON 資料 / Downloaded JSON output
+output/
+*.json
+!config.example.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

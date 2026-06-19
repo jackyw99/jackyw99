@@ -1,0 +1,11 @@
+# 美股歷史資料趴蟲程式所需套件 / Dependencies
+
+# 抓取美股歷史股價 (Yahoo Finance) / Fetch US stock history
+yfinance>=0.2.40
+pandas>=2.0.0
+
+# 上傳檔案到 Google Drive / Upload files to Google Drive
+google-api-python-client>=2.100.0
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
