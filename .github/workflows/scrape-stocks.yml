@@ -1,0 +1,81 @@
+name: Scrape US stocks to Google Drive
+
+# 每天自動抓取美股歷史資料並上傳 Google Drive
+# Daily: scrape US stock history and upload JSON to Google Drive.
+
+on:
+  schedule:
+    # 每天 UTC 22:30 (美股收盤後)；台灣時間隔天早上 06:30
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: "股票代號 (空白分隔) / tickers, space-separated"
+        required: false
+        default: "AMSC AAPL MSFT NVDA"
+      period:
+        description: "期間 / period"
+        required: false
+        default: "1y"
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: us-stock-scraper
+    env:
+      # 第一隻測試股票固定為 AMSC；手動觸發可覆寫
+      TICKERS: ${{ github.event.inputs.tickers || vars.STOCK_TICKERS || 'AMSC AAPL MSFT NVDA' }}
+      PERIOD: ${{ github.event.inputs.period || '1y' }}
+      DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: us-stock-scraper/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write Google service account credentials
+        env:
+          SA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::error::缺少 secret GOOGLE_SERVICE_ACCOUNT_JSON / missing service account secret"
+            exit 1
+          fi
+          printf '%s' "$SA_JSON" > service_account.json
+
+      - name: Scrape and upload
+        env:
+          GOOGLE_SERVICE_ACCOUNT: service_account.json
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+        run: |
+          python -m stock_scraper.main \
+            --tickers $TICKERS \
+            --period "$PERIOD" \
+            --interval 1d \
+            --source yahoo \
+            --with-fundamentals \
+            --drive-folder-id "$DRIVE_FOLDER_ID"
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f service_account.json
+
+      - name: Upload JSON as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-json
+          path: us-stock-scraper/output/*.json
+          if-no-files-found: ignore

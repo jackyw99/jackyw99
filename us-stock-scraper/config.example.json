@@ -1,0 +1,12 @@
+{
+  "tickers": ["AMSC", "AAPL", "MSFT", "NVDA"],
+  "period": "1y",
+  "interval": "1d",
+  "source": "yahoo",
+  "include_fundamentals": true,
+  "output_dir": "output",
+  "upload_to_drive": true,
+  "drive_folder_id": "",
+  "credentials_file": "credentials.json",
+  "token_file": "token.json"
+}
